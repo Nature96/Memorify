@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import LandingPage from './components/LandingPage';
-import SignUp from './components/SignUp';
-import SuccessfulSignUp from './components/SuccessfulSignUp';
-import UnsuccessfulSignUp from './components/UnsuccessfulSignUp';
+import LandingPage from './components/LandingPage/LandingPage';
+import SignUp from './components/SignUp/SignUp';
+import SuccessfulSignUp from './components/SuccessfulSignUp/SuccessfulSignUp';
+import UnsuccessfulSignUp from './components/UnsuccessfulSignUp/UnsuccessfulSignUp';
 
 const App = () => {
   return (

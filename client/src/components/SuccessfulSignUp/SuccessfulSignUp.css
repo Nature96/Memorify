@@ -1,0 +1,44 @@
+/* SuccessfulSignUp.css */
+.success-page {
+  background: linear-gradient(45deg, #1ed760, #25a84b);
+  color: white;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.content {
+  text-align: center;
+}
+
+.heading {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.description {
+  font-size: 1.25rem;
+  margin-bottom: 30px;
+}
+
+.sub-heading {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.backup-info,
+.opt-out-info,
+.contact-info {
+  margin-bottom: 30px;
+}
+
+.contact-link {
+  color: white;
+  text-decoration: underline;
+}
+
+.contact-link:hover {
+  text-decoration: none;
+}

@@ -1,0 +1,51 @@
+/* LandingPage.css */
+.landing-page {
+    background-color: #1e1e1e; /* Black background */
+    color: #00cc66; /* Green text color */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .content {
+    text-align: center;
+  }
+  
+  .heading {
+    font-size: 3rem;
+    margin-bottom: 20px;
+  }
+  
+  .description {
+    font-size: 1.25rem;
+    margin-bottom: 30px;
+  }
+  
+  .cta-button {
+    background-color: #00cc66; /* Green button */
+    color: #1e1e1e; /* Black text */
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .cta-button:hover {
+    background-color: #00994d; /* Darker green on hover */
+  }
+  
+  .cta-button:active {
+    background-color: #007a3d; /* Even darker green when pressed */
+  }
+  
+  .app-name {
+    font-size: 3rem;
+    color: #00cc66; /* Green text color */
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1;
+  }

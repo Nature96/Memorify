@@ -74,16 +74,16 @@ router.get("/callback", async (req, res) => {
     // for (const playlist of playlists) {
     //     // console.log(playlist.name);
     //   }
-  
+
     const discoverWeekly = playlists.find(
       (playlist) => playlist.name === "Discover Weekly"
     );
     const releaseRadar = playlists.find(
       (playlist) => playlist.name === "Release Radar"
-      );
-      
-      console.log("discoverWeeklyId: ", discoverWeekly.id);
-      console.log("releaseRadarId: ", releaseRadar.id);
+    );
+
+    console.log("discoverWeeklyId: ", discoverWeekly.id);
+    console.log("releaseRadarId: ", releaseRadar.id);
 
     // Create new playlists
     await createBackupPlaylist(
@@ -129,40 +129,38 @@ async function saveToDatabase(db, email, refreshToken) {
 }
 
 async function createBackupPlaylist(sourcePlaylistId, backupPlaylistName) {
-    const user = await spotifyApi.getMe();
-    console.log("user in create: ", user);
-    const userId = user.body.id;
-    console.log("userId in create: ", userId);
+  const user = await spotifyApi.getMe();
+  console.log("user in create: ", user);
+  const userId = user.body.id;
+  console.log("userId in create: ", userId);
 
-    const options = {
-        description: 'Memorified playlist created by Memorify, ',
-        collaborative: false,
-        public: false,
-      };
+  const options = {
+    description: "Memorified playlist created by Memorify, ",
+    collaborative: false,
+    public: false,
+  };
 
   // Create the new playlist
   const newPlaylist = await spotifyApi.createPlaylist(
     backupPlaylistName,
     options
-    );
-    
-    console.log("newPlaylist: ", newPlaylist);
+  );
+
+  console.log("newPlaylist: ", newPlaylist);
 
   // Get the tracks from the source playlist
   const sourcePlaylistTracks = await spotifyApi.getPlaylistTracks(
     sourcePlaylistId
-    );
-    
-    console.log("source playlist: ", sourcePlaylistTracks);
+  );
+
+  console.log("source playlist: ", sourcePlaylistTracks);
 
   // Extract track URIs
   const trackUris = sourcePlaylistTracks.body.items.map(
     (item) => item.track.uri
-    );
+  );
 
-    console.log("track uris: ", trackUris);
-    
-
+  console.log("track uris: ", trackUris);
 
   // Add the tracks to the new playlist
   await spotifyApi.addTracksToPlaylist(newPlaylist.body.id, trackUris);

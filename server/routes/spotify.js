@@ -61,11 +61,46 @@ router.get("/callback", async (req, res) => {
     const userData = userDataResponse.body;
     const email = userData.email;
 
+    console.log("User Data:", userData);
+
+    // Get today's date in the required format (e.g., "2023-10-10")
+    const today = new Date().toISOString().split("T")[0];
+
+    // Get Discover Weekly and Release Radar playlists
+    console.log("userId: ", userData.id);
+    const playlistsResponse = await spotifyApi.getUserPlaylists(userData.id);
+
+    const playlists = playlistsResponse.body.items;
+    // for (const playlist of playlists) {
+    //     // console.log(playlist.name);
+    //   }
+  
+    const discoverWeekly = playlists.find(
+      (playlist) => playlist.name === "Discover Weekly"
+    );
+    const releaseRadar = playlists.find(
+      (playlist) => playlist.name === "Release Radar"
+      );
+      
+      console.log("discoverWeeklyId: ", discoverWeekly.id);
+      console.log("releaseRadarId: ", releaseRadar.id);
+
+    // Create new playlists
+    await createBackupPlaylist(
+      discoverWeekly.id,
+      `MemorifiedDiscoverWeekly - ${today}`
+    );
+    await createBackupPlaylist(
+      releaseRadar.id,
+      `MemorifiedReleaseRadar - ${today}`
+    );
+
     const db = getDatabase();
     await saveToDatabase(db, email, refresh_token);
 
     res.redirect("http://localhost:3000/successful-sign-up");
   } catch (error) {
+    console.log(error);
     res.redirect("http://localhost:3000/unsuccessful-sign-up");
   }
 });
@@ -91,6 +126,46 @@ async function saveToDatabase(db, email, refreshToken) {
     // Create a new user entry
     await userCollection.insertOne({ email, refreshToken });
   }
+}
+
+async function createBackupPlaylist(sourcePlaylistId, backupPlaylistName) {
+    const user = await spotifyApi.getMe();
+    console.log("user in create: ", user);
+    const userId = user.body.id;
+    console.log("userId in create: ", userId);
+
+    const options = {
+        description: 'Memorified playlist created by Memorify, ',
+        collaborative: false,
+        public: false,
+      };
+
+  // Create the new playlist
+  const newPlaylist = await spotifyApi.createPlaylist(
+    backupPlaylistName,
+    options
+    );
+    
+    console.log("newPlaylist: ", newPlaylist);
+
+  // Get the tracks from the source playlist
+  const sourcePlaylistTracks = await spotifyApi.getPlaylistTracks(
+    sourcePlaylistId
+    );
+    
+    console.log("source playlist: ", sourcePlaylistTracks);
+
+  // Extract track URIs
+  const trackUris = sourcePlaylistTracks.body.items.map(
+    (item) => item.track.uri
+    );
+
+    console.log("track uris: ", trackUris);
+    
+
+
+  // Add the tracks to the new playlist
+  await spotifyApi.addTracksToPlaylist(newPlaylist.body.id, trackUris);
 }
 
 module.exports = router;

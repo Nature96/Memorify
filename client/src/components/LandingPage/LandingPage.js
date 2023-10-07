@@ -17,7 +17,7 @@ const LandingPage = () => {
           <button className="cta-button">Get Started with Memorify</button>
         </Link>
       </div>
-      <div className="app-name">
+      <div className="app-name-landing">
         Memorify
       </div>
     </div>

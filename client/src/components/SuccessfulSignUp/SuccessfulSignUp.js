@@ -38,6 +38,9 @@ const SuccessfulSignUp = () => {
           </p>
         </div>
       </div>
+      <div className="app-name-successful">
+        Memorify
+      </div>
     </div>
   );
 };

@@ -42,3 +42,12 @@
 .contact-link:hover {
   text-decoration: none;
 }
+
+.app-name-successful {
+    font-size: 3rem;
+    color: white; /* Green text color */
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1;
+  }

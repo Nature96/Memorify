@@ -23,6 +23,9 @@ const SignUp = () => {
           </a>
         </p>
       </div>
+      <div className="app-name-signup">
+        Memorify
+      </div>
     </div>
   );
 };

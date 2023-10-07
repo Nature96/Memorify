@@ -41,7 +41,7 @@
     background-color: #007a3d; /* Even darker green when pressed */
   }
   
-  .app-name {
+  .app-name-landing {
     font-size: 3rem;
     color: #00cc66; /* Green text color */
     position: absolute;

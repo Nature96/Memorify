@@ -1,6 +1,7 @@
 // SuccessfulSignUp.js
 import React from 'react';
 import './SuccessfulSignUp.css';
+import logo from '../../icons/memorify-high-resolution-logo-white-on-transparent-background.png'; // Import the logo image
 
 const SuccessfulSignUp = () => {
   return (
@@ -38,9 +39,7 @@ const SuccessfulSignUp = () => {
           </p>
         </div>
       </div>
-      <div className="app-name-successful">
-        Memorify
-      </div>
+      <img src={logo} alt="Memorify Logo" className="app-logo" /> {/* Use the logo image */}
     </div>
   );
 };

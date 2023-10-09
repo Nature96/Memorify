@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import './LandingPage.css';
+import logo from '../../icons/memorify-high-resolution-logo-color-on-transparent-background.png'; // Import the logo image
 
 const LandingPage = () => {
   return (
@@ -8,7 +9,7 @@ const LandingPage = () => {
       <div className="content">
         <h1 className="heading">Never Miss a Beat.</h1>
         <p className="description">
-          Your Discover Weekly and Release Radar playlists, effortlessly saved and always accessible.
+          Your <span className='white-text'>Discover Weekly</span> and <span className='white-text'>Release Radar</span> playlists, effortlessly saved and always accessible.
         </p>
         <p className="description">
           Runs automatically so that you don't have to.
@@ -17,9 +18,7 @@ const LandingPage = () => {
           <button className="cta-button">Get Started with Memorify</button>
         </Link>
       </div>
-      <div className="app-name-landing">
-        Memorify
-      </div>
+      <img src={logo} alt="Memorify Logo" className="app-logo" /> {/* Use the logo image */}
     </div>
   );
 };

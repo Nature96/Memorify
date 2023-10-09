@@ -22,6 +22,11 @@
     font-size: 1.25rem;
     margin-bottom: 30px;
   }
+
+  .white-text {
+    color: white;
+    font-weight: bold;
+  }
   
   .cta-button {
     background-color: #00cc66; /* Green button */
@@ -44,6 +49,15 @@
   .app-name-landing {
     font-size: 3rem;
     color: #00cc66; /* Green text color */
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1;
+  }
+
+  .app-logo {
+    width: 200px; /* Adjust the width as needed */
+    height: auto; /* Maintain aspect ratio */
     position: absolute;
     top: 20px;
     left: 20px;

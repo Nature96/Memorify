@@ -2,6 +2,8 @@
 import React from 'react';
 import './SignUp.css';
 import spotifyIcon from './spotify-icon2.png';
+import logo from '../../icons/memorify-high-resolution-logo-white-on-transparent-background.png'; // Import the logo image
+
 
 const SignUp = () => {
   return (
@@ -23,9 +25,7 @@ const SignUp = () => {
           </a>
         </p>
       </div>
-      <div className="app-name-signup">
-        Memorify
-      </div>
+      <img src={logo} alt="Memorify Logo" className="app-logo" /> {/* Use the logo image */}
     </div>
   );
 };

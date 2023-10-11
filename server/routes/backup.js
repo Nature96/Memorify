@@ -1,44 +1,41 @@
-const { MongoClient } = require('mongodb');
-const { SpotifyApi, createBackupPlaylist } = require('./spotify');
+const { createBackupPlaylists } = require("./spotify");
+const { getDatabase, connectToDatabase } = require("./db");
+const { spotifyApi } = require("./spotify");
 
-const mongoURI = 'YOUR_MONGODB_URI';
-const dbName = 'memorifyDb';
-
-async function backupPlaylistsForAllUsers() {
-  const client = new MongoClient(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
-
+async function refreshAccessTokenIfNecessary(refreshToken) {
   try {
-    await client.connect();
-    console.log('Connected to MongoDB');
-
-    const db = client.db('memorifyDb');
-    const userCollection = db.collection('users');
-    const users = await userCollection.find().toArray();
-
-    for (const user of users) {
-      // Assume user.refreshToken exists in the user document
-      const spotifyApi = new SpotifyApi(user.refreshToken);
-
-      // Implement function to get source playlist IDs for the user (e.g., Discover Weekly, Release Radar)
-      const sourcePlaylistIds = getSourcePlaylistIdsForUser(user );
-
-      for (const sourcePlaylistId of sourcePlaylistIds) {
-        // Generate backup playlist name
-        const backupPlaylistName = `MemorifiedPlaylist - ${new Date().toISOString()}`;
-
-        // Create a backup playlist for the source playlist
-        await createBackupPlaylist(spotifyApi, sourcePlaylistId, backupPlaylistName);
-      }
+    if (!spotifyApi.getAccessToken() || spotifyApi.isAccessTokenExpired()) {
+      const data = await spotifyApi.refreshAccessToken(refreshToken);
+      const newAccessToken = data.body["access_token"];
+      spotifyApi.setAccessToken(newAccessToken);
     }
   } catch (error) {
-    console.error('Error during backup:', error);
-  } finally {
-    await client.close();
+    console.error("Error refreshing access token:", error);
   }
 }
 
+async function iterateOverUsers() {
+  connectToDatabase();
+  const db = getDatabase();
+  const userCollection = db.collection("users");
+  const today = new Date().toISOString().split("T")[0];
 
+  const cursor = userCollection.find();
 
+  for await (const user of cursor) {
+    const spotifyId = user.spotifyId;
+    const refreshToken = user.refreshToken;
+    const email = user.email;
 
+    try {
+      await refreshAccessTokenIfNecessary(refreshToken);
+      await createBackupPlaylists(spotifyId, today);
+    } catch (error) {
+      console.log("Error processing user ID " + spotifyId + ": ", error);
+    }
+  }
+}
 
-module.exports = { backupPlaylistsForAllUsers };
+module.exports = {
+  iterateOverUsers,
+};

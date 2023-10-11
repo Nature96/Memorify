@@ -16,7 +16,7 @@ const SignUp = () => {
           <br />
           <br />
           <a
-            href="http://localhost:5000/spotify/auth"
+            href="http://localhost:5000/auth"
             target="_blank"
             rel="noopener noreferrer"
             className="sign-up-link"

@@ -53,7 +53,7 @@ async function saveRefreshTokenToDatabase(db, refreshToken, expiresIn) {
 
   const tokenDocument = {
     refreshToken,
-    expiresAt: expiresAt, // Store expires_in value directly
+    expiresAt: expiresAt,
   };
 
   const result = await tokenCollection.updateOne(

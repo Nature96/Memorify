@@ -1,0 +1,47 @@
+/* UnsuccessfulSignUp.css */
+.error-page {
+  background: linear-gradient(45deg, #191414, #1db954);
+  color: white;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.error-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.error-heading {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  color: #ffffff; /* White text color */
+}
+
+.error-description {
+  font-size: 1.25rem;
+  margin-bottom: 30px;
+  color: #b3b3b3; /* Light gray text color */
+}
+
+.retry-heading {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #ffffff; /* White text color */
+}
+
+.retry-info,
+.contact-info {
+  margin-bottom: 30px;
+}
+
+.contact-link {
+  color: #1db954; /* Green text color */
+  text-decoration: underline;
+}
+
+.contact-link:hover {
+  text-decoration: none;
+}

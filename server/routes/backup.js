@@ -6,6 +6,8 @@ async function refreshAccessTokenIfNecessary(db, refreshToken, expiresAt) {
   try {
     console.log("in refreshAccess");
     const accessToken = await spotifyApi.getAccessToken();
+    console.log("access token is: ", accessToken);
+    console.log("expiresAt is: ", expiresAt);
 
     // Calculate expiration time with buffer (5 minutes)
     const bufferMilliseconds = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -23,7 +25,7 @@ async function refreshAccessTokenIfNecessary(db, refreshToken, expiresAt) {
 
       const newAccessToken = refreshedAccessToken.body["access_token"];
       const newExpiresAt = refreshedAccessToken.body["expires_in"];
-      spotifyApi.setAccessToken(newAccessToken);
+      await spotifyApi.setAccessToken(newAccessToken);
 
       result = await saveRefreshTokenToDatabase(db, refreshToken, newExpiresAt);
     }

@@ -1,4 +1,4 @@
-const { getDatabase } = require("./db");
+// const { getDatabase } = require("./db");
 const express = require("express");
 const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");

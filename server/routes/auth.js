@@ -1,4 +1,8 @@
-const { getDatabase } = require("./db");
+const {
+  connectToDatabase,
+  saveToDatabase,
+  saveRefreshTokenToDatabase,
+} = require("./db");
 const express = require("express");
 const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");
@@ -37,53 +41,90 @@ router.get("/", (req, res) => {
 });
 
 router.get("/callback", async (req, res) => {
-    console.log("now in here!");
+  console.log("now in here!");
   const { code } = req.query;
   try {
     const data = await spotifyApi.authorizationCodeGrant(code);
-    const { access_token, refresh_token } = data.body;
-    spotifyApi.setAccessToken(access_token);
-    spotifyApi.setRefreshToken(refresh_token);
+    console.log("data.body is: ", data.body);
+    const { access_token, refresh_token, expires_in } = data.body;
+    await spotifyApi.setAccessToken(access_token);
+    await spotifyApi.setRefreshToken(refresh_token);
 
     const userDataResponse = await spotifyApi.getMe();
+
     const userData = userDataResponse.body;
+    console.log("userData is: ", userData);
     const email = userData.email;
     const userId = userData.id;
 
     console.log("User Data:", userData);
 
-    const db = getDatabase();
-    const result = await saveToDatabase(db, userId, email, refresh_token);
-
-    if (result.modifiedCount === 1 || result.upsertedCount === 1) {
+    const db = await connectToDatabase();
+    console.log("db is: ", db);
+    const userSaved = await saveToDatabase(db, userId, email);
+    const tokenSaved = await saveRefreshTokenToDatabase(
+      db,
+      refresh_token,
+      expires_in
+    );
+    
+    if (
+      (userSaved.modifiedCount === 1 ||
+        userSaved.upsertedCount === 1 ||
+        userSaved.matchedCount === 1) &&
+      (tokenSaved.modifiedCount === 1 ||
+        tokenSaved.upsertedCount === 1 ||
+        tokenSaved.matchedCount === 1)
+    ) {
       res.redirect("http://localhost:3000/successful-sign-up");
     } else {
+      console.log;
       res.redirect("http://localhost:3000/unsuccessful-sign-up");
     }
   } catch (error) {
-    console.error(error);
+    console.error("error: ", error);
     res.redirect("http://localhost:3000/unsuccessful-sign-up");
   }
 });
 
-async function saveToDatabase(db, userDataId, email, refreshToken) {
-  const userCollection = db.collection("users");
+// TODO:  moved to db.js for now. If this doesn't work, uncomment the following block and remove it from db.js, along with the pertinent export in db.js.
+// async function saveToDatabase(db, userDataId, email) {
+//   const userCollection = db.collection("users");
 
-  const userDocument = {
-    spotifyId: userDataId,
-    email,
-    refreshToken,
-  };
+//   const userDocument = {
+//     spotifyId: userDataId,
+//     email,
+//   };
 
-  const result = await userCollection.updateOne(
-    { spotifyId: userDataId },
-    { $set: userDocument },
-    { upsert: true }
-  );
+//   const result = await userCollection.updateOne(
+//     { spotifyId: userDataId },
+//     { $set: userDocument },
+//     { upsert: true }
+//   );
 
-  console.log("User saved/updated:", result);
+//   console.log("User saved/updated:", result);
 
-  return result;
-}
+//   return result;
+// }
+
+// TODO:  moved to db.js for now. If this doesn't work, uncomment the following block and remove it from db.js, along with the pertinent export in db.js.
+// async function saveRefreshTokenToDatabase(db, refreshToken, expiresIn) {
+//   const tokenCollection = db.collection("tokens");
+
+//   const tokenDocument = {
+//     refreshToken,
+//     expiresInSeconds: expiresIn, // Store expires_in value directly
+//   };
+
+//   const result = await tokenCollection.updateOne(
+//     {}, // No specific criteria since it's a single token
+//     { $set: tokenDocument },
+//     { upsert: true }
+//   );
+
+//   console.log("Refresh token saved/updated:", result);
+
+//   return result;
+// }
 
 module.exports = router;

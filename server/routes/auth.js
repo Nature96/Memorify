@@ -67,7 +67,7 @@ router.get("/callback", async (req, res) => {
       refresh_token,
       expires_in
     );
-    
+
     if (
       (userSaved.modifiedCount === 1 ||
         userSaved.upsertedCount === 1 ||

@@ -76,14 +76,14 @@ router.get("/callback", async (req, res) => {
         tokenSaved.upsertedCount === 1 ||
         tokenSaved.matchedCount === 1)
     ) {
-      res.redirect("http://localhost:3000/successful-sign-up");
+      res.redirect("https://memorifyclient.vercel.app/successful-sign-up");
     } else {
       console.log;
-      res.redirect("http://localhost:3000/unsuccessful-sign-up");
+      res.redirect("https://memorifyclient.vercel.app/unsuccessful-sign-up");
     }
   } catch (error) {
     console.error("error: ", error);
-    res.redirect("http://localhost:3000/unsuccessful-sign-up");
+    res.redirect("https://memorifyclient.vercel.app/unsuccessful-sign-up");
   }
 });
 

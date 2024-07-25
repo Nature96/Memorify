@@ -10,7 +10,7 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: "https://memorifyserver.vercel.app/auth/callback",
+  redirectUri: "https://memorify-q4q0.onrender.com/auth/callback",
 });
 
 var generateRandomString = function (length = 16) {

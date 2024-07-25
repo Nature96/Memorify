@@ -16,7 +16,7 @@ const SignUp = () => {
           <br />
           <br />
           <a
-            href="https://memorifyserver.vercel.app/auth"
+            href="https://memorify-q4q0.onrender.com/auth"
             target="_blank"
             rel="noopener noreferrer"
             className="sign-up-link"

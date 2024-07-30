@@ -23,13 +23,21 @@ async function createBackupPlaylists(userId, date) {
       (playlist) => playlist.name === "Release Radar"
     );
 
+    const existingMemorifiedDiscoverWeekly = playlists.find(
+      (playlist) => playlist.name === `MemorifiedDiscoverWeekly - ${date}`
+    );
+
+    const existingMemorifiedReleaseRadar = playlists.find(
+      (playlist) => playlist.name === `MemorifiedReleaseRadar - ${date}`
+    );
+
     const discoverWeeklyId = discoverWeekly.id;
     const releaseRadarId = releaseRadar.id;
 
     console.log("discoverWeeklyId: ", discoverWeeklyId);
     console.log("releaseRadarId: ", releaseRadarId);
 
-    if (discoverWeekly) {
+    if (discoverWeekly && !existingMemorifiedDiscoverWeekly) {
       // Create new playlists
       const options = {
         description: "Memorified Discover Weekly playlist created by Memorify.",
@@ -61,7 +69,7 @@ async function createBackupPlaylists(userId, date) {
       await spotifyApi.addTracksToPlaylist(newPlaylist.body.id, trackUris);
     }
 
-    if (releaseRadar) {
+    if (releaseRadar && !existingMemorifiedReleaseRadar) {
       // Create new playlists
       const options = {
         description: "Memorified Release Radar playlist created by Memorify.",

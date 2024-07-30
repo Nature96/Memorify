@@ -12,7 +12,7 @@ const LandingPage = () => {
           Your <span className='white-text'>Discover Weekly</span> and <span className='white-text'>Release Radar</span> playlists, effortlessly saved and always accessible.
         </p>
         <p className="description">
-          Runs automatically so that you don't have to.
+          Runs automatically - let us handle the boring part.
         </p>
         <Link to="/sign-up">
           <button className="cta-button">Get Started with Memorify</button>

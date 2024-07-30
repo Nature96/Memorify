@@ -44,7 +44,7 @@ const startServer = async () => {
   });
 
   // Schedule the task to run every Saturday at 2 AM (0 2 * * 6)
-  // cron.schedule("0 2 * * 6", async () => {
+  cron.schedule("0 2 * * 6", async () => {
   try {
     console.log("Running the task...");
     await iterateOverUsers();
@@ -52,7 +52,7 @@ const startServer = async () => {
   } catch (error) {
     console.error("Error running the task:", error);
   }
-  // });
+  });
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

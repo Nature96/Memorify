@@ -78,6 +78,10 @@ async function getRefreshTokenExpireValue(db) {
   }
 }
 
+// async function errorLog(userId, severity, errorMsg, time = now()) {
+  
+// }
+
 
 
 module.exports = {

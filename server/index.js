@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const cron = require("node-cron");
 const { connectToDatabase } = require("./routes/db");
-const { iterateOverUsers } = require("./routes/backup");
+const { iterateOverUsersReleaseAndDiscover, iterateOverUsersDaylists } = require("./routes/backup");
 const handleAuth = require("./routes/auth");
 // const handleCallback = require("./routes/callback");
 
@@ -33,10 +33,8 @@ const startServer = async () => {
   // Require and use the Spotify routes
   app.get("/auth", handleAuth);
 
-  // app.get("/auth/callback", handleCallback);
   const spotifyRoutes = require("./routes/auth");
   app.use("/auth", spotifyRoutes);
-  // app.use("/auth", authRouter);
 
   // Define the root route
   app.get("/", (req, res) => {
@@ -44,15 +42,27 @@ const startServer = async () => {
   });
 
   // Schedule the task to run every Saturday at 2 AM (0 2 * * 6)
-  cron.schedule("0 2 * * 6", async () => {
-  try {
-    console.log("Running the task...");
-    await iterateOverUsers();
-    console.log("Task completed.");
-  } catch (error) {
-    console.error("Error running the task:", error);
-  }
-  });
+  // cron.schedule("0 2 * * 6", async () => {
+  // try {
+  //   console.log("Running the task...");
+  //   await iterateOverUsers();
+  //   console.log("Task completed.");
+  // } catch (error) {
+  //   console.error("Error running the task:", error);
+  // }
+  // });
+
+   // Schedule the task to run every hour
+  //  cron.schedule("0 2 * * 6", async () => {
+    try {
+      console.log("Running the task...");
+      await iterateOverUsersReleaseAndDiscover();
+      await iterateOverUsersDaylists();
+      console.log("Task completed.");
+    } catch (error) {
+      console.error("Error running the task:", error);
+    }
+    // });
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

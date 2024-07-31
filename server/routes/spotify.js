@@ -9,105 +9,299 @@ const spotifyApi = new SpotifyWebApi({
   redirectUri: "https://memorify-q4q0.onrender.com/auth/callback",
 });
 
-async function createBackupPlaylists(userId, date) {
+async function createBackupGeneric(spotifyPlaylist, userId) {
   try {
-    // Get Discover Weekly and Release Radar playlists
+    if (spotifyPlaylist === 'Discover Weekly' || spotifyPlaylist === 'Release Radar') {
+      
+      // Get spotifyPlaylist (Discover Weekly or Release Radar)
+      const userPlaylists = await spotifyApi.getUserPlaylists(userId);
+      const playlists = userPlaylists.body.items;
+
+      const originalPlaylist = playlists.find(
+        (playlist) => 
+          playlist.name === spotifyPlaylist &&
+          playlist.owner.display_name === "Spotify" &&
+          playlist.owner.id === 'spotify'
+      );
+
+      if (originalPlaylist) {
+        let date;
+        if(spotifyPlaylist === 'Discover Weekly') {
+          date = await calculateLastMonday();
+        }
+        else {
+          date = await calculateLastFriday();
+        }
+        
+        const originalPlaylistId = originalPlaylist.id;
+        const strippedSpotifyPlaylist = spotifyPlaylist.replace(/\s+/g, '');
+
+        const existingMemorifiedPlaylist = playlists.find(
+          (playlist) => playlist.name === `Memorified${strippedSpotifyPlaylist} - ${date}`
+        );
+
+        if (!existingMemorifiedPlaylist) {
+          const options = {
+            description: `Memorified ${spotifyPlaylist} playlist created by Memorify.`,
+            collaborative: false,
+            public: false,
+          };
+
+          // Create the new playlist
+          const newPlaylist = await spotifyApi.createPlaylist(
+            `Memorified${strippedSpotifyPlaylist} - ${date}`,
+            options
+          );
+
+          // Get list of tracks to backup
+          const sourcePlaylistTracks = await spotifyApi.getPlaylistTracks(originalPlaylistId);
+
+          // Extract track URIs
+          const trackUris = sourcePlaylistTracks.body.items.map((item) => item.track.uri);
+
+          // Add the tracks to the new playlist
+          await spotifyApi.addTracksToPlaylist(newPlaylist.body.id, trackUris);
+        }
+      } else {
+        console.log(`No ${spotifyPlaylist} playlist found for ${userId}`);
+      }
+    } else {
+      console.log(`Incorrect ${spotifyPlaylist} name in createBackupGeneric`);
+    }
+  } catch (error) {
+    console.error("Error creating backup for :" + spotifyPlaylist, error);
+  }
+}
+
+async function createBackupGenericSamePlaylist(spotifyPlaylist, userId) {
+  try {
+
+    if (spotifyPlaylist === 'Discover Weekly' || spotifyPlaylist === 'Release Radar') {
+      
+      // Get spotifyPlaylist (Discover Weekly or Release Radar)
+      const userPlaylists = await spotifyApi.getUserPlaylists(userId);
+      const playlists = userPlaylists.body.items;
+
+      const originalPlaylist = playlists.find(
+        (playlist) => playlist.name === spotifyPlaylist
+      );
+
+      if (originalPlaylist) {
+        const originalPlaylistId = originalPlaylist.id;
+        const strippedSpotifyPlaylist = spotifyPlaylist.replace(/\s+/g, '');
+
+        let existingMemorifiedPlaylist = playlists.find(
+          (playlist) => playlist.name === `Memorified${strippedSpotifyPlaylist}`
+        );
+
+        if (!existingMemorifiedPlaylist) {
+          const options = {
+            description: `Memorified ${spotifyPlaylist} playlist created by Memorify.`,
+            collaborative: false,
+            public: false,
+          };
+
+          // Create the new playlist
+          existingMemorifiedPlaylist = await spotifyApi.createPlaylist(
+            `Memorified${strippedSpotifyPlaylist}`,
+            options
+          );
+        }
+
+        // Get list of tracks to backup
+        const sourcePlaylistTracks = await spotifyApi.getPlaylistTracks(originalPlaylistId);
+
+        // Extract track URIs
+        const trackUris = sourcePlaylistTracks.body.items.map((item) => item.track.uri);
+
+        // Get existing tracks from the memorified playlist
+        const existingTracks = await spotifyApi.getPlaylistTracks(existingMemorifiedPlaylist.id);
+        const existingTrackUris = new Set(existingTracks.body.items.map((item) => item.track.uri));
+
+        // Filter out tracks that are already in the memorified playlist
+        const newTrackUris = trackUris.filter(uri => !existingTrackUris.has(uri));
+
+        if (newTrackUris.length > 0) {
+          // Add the new tracks to the memorified playlist
+          await spotifyApi.addTracksToPlaylist(existingMemorifiedPlaylist.id, newTrackUris);
+        }
+      } else {
+        console.log(`No ${spotifyPlaylist} playlist found for ${userId}`);
+      }
+    } else {
+      console.log(`Incorrect ${spotifyPlaylist} name in createBackupGenericSamePlaylist`);
+    }
+  } catch (error) {
+    console.error("Error creating backup for :" + spotifyPlaylist, error);
+  }
+}
+
+
+async function createBackupDaylists(userId)
+{
+  try {
+    // Get Daylist playlist
     const userPlaylists = await spotifyApi.getUserPlaylists(userId);
     const playlists = userPlaylists.body.items;
 
-    const discoverWeekly = playlists.find(
-      (playlist) => playlist.name === "Discover Weekly"
+    const daylist = playlists.find(
+      (playlist) =>
+        playlist.name.startsWith("daylist") &&
+        playlist.owner.display_name === "Spotify" &&
+        playlist.description.startsWith("You listened to ") &&
+        playlist.images?.some(image => image.url.includes("daylist"))
     );
 
-    const releaseRadar = playlists.find(
-      (playlist) => playlist.name === "Release Radar"
-    );
-
-    const existingMemorifiedDiscoverWeekly = playlists.find(
-      (playlist) => playlist.name === `MemorifiedDiscoverWeekly - ${date}`
-    );
-
-    const existingMemorifiedReleaseRadar = playlists.find(
-      (playlist) => playlist.name === `MemorifiedReleaseRadar - ${date}`
-    );
-
-    const discoverWeeklyId = discoverWeekly.id;
-    const releaseRadarId = releaseRadar.id;
-
-    console.log("discoverWeeklyId: ", discoverWeeklyId);
-    console.log("releaseRadarId: ", releaseRadarId);
-
-    if (discoverWeekly && !existingMemorifiedDiscoverWeekly) {
-      // Create new playlists
-      const options = {
-        description: "Memorified Discover Weekly playlist created by Memorify.",
-        collaborative: false,
-        public: false,
-      };
-
-      // Create the new playlist
-      const newPlaylist = await spotifyApi.createPlaylist(
-        `MemorifiedDiscoverWeekly - ${date}`,
-        options
+    if(daylist)
+    {
+      const daylistId = daylist.id;
+      
+      const spotifyDaylistName = daylist.name;
+      const newDaylistDescription = `Memorified Daylist: ${spotifyDaylistName}`;
+      
+      const currentDate = new Date().toISOString().split("T")[0];
+      const newDaylistName = `MemorifiedDaylist - ${currentDate}`;
+      
+      const existingMemorifiedDaylist = playlists.find(
+        (playlist) => 
+          playlist.name === `${newDaylistName}` &&
+          playlist.description === `${newDaylistDescription}`
       );
-
-      // Get list of tracks to backup
-      const sourcePlaylistTracks = await spotifyApi.getPlaylistTracks(
-        discoverWeeklyId
-      );
-
-      console.log("source playlist: ", sourcePlaylistTracks);
-
-      // Extract track URIs
-      const trackUris = sourcePlaylistTracks.body.items.map(
-        (item) => item.track.uri
-      );
-
-      console.log("track uris: ", trackUris);
-
-      // Add the tracks to the new playlist
-      await spotifyApi.addTracksToPlaylist(newPlaylist.body.id, trackUris);
+      
+      if (!existingMemorifiedDaylist) {  
+        const options = {
+          description: `${newDaylistDescription}`,
+          collaborative: false,
+          public: false,
+        };
+  
+        // Create the new playlist
+        const newPlaylist = await spotifyApi.createPlaylist(
+          `${newDaylistName}`,
+          options
+        );
+  
+        // Get list of tracks to backup
+        const sourcePlaylistTracks = await spotifyApi.getPlaylistTracks(
+          daylistId
+        );
+  
+        // Extract track URIs
+        const trackUris = sourcePlaylistTracks.body.items.map(
+          (item) => item.track.uri
+        );
+  
+        // Add the tracks to the new playlist
+        await spotifyApi.addTracksToPlaylist(newPlaylist.body.id, trackUris);
+      }
     }
-
-    if (releaseRadar && !existingMemorifiedReleaseRadar) {
-      // Create new playlists
-      const options = {
-        description: "Memorified Release Radar playlist created by Memorify.",
-        collaborative: false,
-        public: false,
-      };
-
-      // Create the new playlist
-      const newPlaylist = await spotifyApi.createPlaylist(
-        `MemorifiedReleaseRadar - ${date}`,
-        options
-      );
-
-      // Get list of tracks to backup
-      const sourcePlaylistTracks = await spotifyApi.getPlaylistTracks(
-        releaseRadarId
-      );
-
-      console.log("source playlist: ", sourcePlaylistTracks);
-
-      // Extract track URIs
-      const trackUris = sourcePlaylistTracks.body.items.map(
-        (item) => item.track.uri
-      );
-
-      console.log("track uris: ", trackUris);
-
-      // Add the tracks to the new playlist
-      await spotifyApi.addTracksToPlaylist(newPlaylist.body.id, trackUris);
+    else {
+      console.log("No daylist found for user " + `${userId}`);
     }
   } catch (error) {
-    console.error("Error in createBackupPlaylists:", error);
+    console.error("Error in createBackupDaylists:", error);
     throw error;
   }
 }
 
+async function createBackupDaylistsSamePlaylist(userId) {
+  try {
+    // Get Daylist playlist
+    const userPlaylists = await spotifyApi.getUserPlaylists(userId);
+    const playlists = userPlaylists.body.items;
+
+    const daylist = playlists.find(
+      (playlist) =>
+        playlist.name.startsWith("daylist") &&
+        playlist.owner.display_name === "Spotify" &&
+        playlist.description.startsWith("You listened to ") &&
+        playlist.images?.some(image => image.url.includes("daylist"))
+    );
+
+    if (daylist) {
+      const daylistId = daylist.id;
+            
+      const newDaylistName = 'MemorifiedDaylist';
+      
+      let existingMemorifiedDaylist = playlists.find(
+        (playlist) => 
+          playlist.name === `${newDaylistName}`
+      );
+
+      if (!existingMemorifiedDaylist) {  
+        const options = {
+          description: `${newDaylistDescription}`,
+          collaborative: false,
+          public: false,
+        };
+
+        // Create the new playlist
+        existingMemorifiedDaylist = await spotifyApi.createPlaylist(
+          `${newDaylistName}`,
+          options
+        );
+      }
+
+      // Get list of tracks to backup
+      const sourcePlaylistTracks = await spotifyApi.getPlaylistTracks(daylistId);
+
+      // Extract track URIs
+      const trackUris = sourcePlaylistTracks.body.items.map((item) => item.track.uri);
+
+      // Get existing tracks from the memorified daylist
+      const existingTracks = await spotifyApi.getPlaylistTracks(existingMemorifiedDaylist.id);
+      const existingTrackUris = new Set(existingTracks.body.items.map((item) => item.track.uri));
+
+      // Filter out tracks that are already in the memorified daylist
+      const newTrackUris = trackUris.filter(uri => !existingTrackUris.has(uri));
+
+      if (newTrackUris.length > 0) {
+        // Add the new tracks to the memorified daylist
+        await spotifyApi.addTracksToPlaylist(existingMemorifiedDaylist.id, newTrackUris);
+      }
+    } else {
+      console.log("No daylist found for user " + `${userId}`);
+    }
+  } catch (error) {
+    console.error("Error in createBackupDaylistsSamePlaylist:", error);
+    throw error;
+  }
+}
+
+
+async function calculateLastMonday()
+{
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const diffToMonday = (dayOfWeek + 6) % 7; // Number of days to subtract to get to Monday
+  const previousMonday = new Date(today);
+  previousMonday.setDate(today.getDate() - diffToMonday);
+
+  // Format the date as YYYY-MM-DD
+  const previousMondayString = previousMonday.toISOString().split("T")[0];
+
+  return previousMondayString;
+}
+
+async function calculateLastFriday() {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const diffToFriday = (dayOfWeek + 2) % 7 + 1; // Number of days to subtract to get to the last Friday
+  const previousFriday = new Date(today);
+  previousFriday.setDate(today.getDate() - diffToFriday);
+
+  // Format the date as YYYY-MM-DD
+  const previousFridayString = previousFriday.toISOString().split("T")[0];
+
+  return previousFridayString;
+}
+
+
 module.exports = {
   router,
   spotifyApi,
-  createBackupPlaylists,
+  createBackupDaylists,
+  createBackupDaylistsSamePlaylist,
+  createBackupGeneric,
+  createBackupGenericSamePlaylist,
 };

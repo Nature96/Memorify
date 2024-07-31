@@ -37,7 +37,7 @@ async function saveToDatabase(db, userDataId, email) {
     { upsert: true }
   );
 
-  console.log("User saved/updated:", result);
+  // console.log("User saved/updated:", result);
 
   return result;
 }
@@ -62,7 +62,7 @@ async function saveRefreshTokenToDatabase(db, refreshToken, expiresIn) {
     { upsert: true }
   );
 
-  console.log("Refresh token saved/updated:", result);
+  // console.log("Refresh token saved/updated:", result);
 
   return result;
 }

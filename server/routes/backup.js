@@ -1,13 +1,10 @@
-const { createBackupPlaylists } = require("./spotify");
+const { createBackupDaylists, createBackupGeneric } = require("./spotify");
 const { connectToDatabase, saveRefreshTokenToDatabase } = require("./db");
 const { spotifyApi } = require("./spotify");
 
 async function refreshAccessTokenIfNecessary(db, refreshToken, expiresAt) {
   try {
-    console.log("in refreshAccess");
     const accessToken = await spotifyApi.getAccessToken();
-    console.log("access token is: ", accessToken);
-    console.log("expiresAt is: ", expiresAt);
 
     // Calculate expiration time with buffer (5 minutes)
     const bufferMilliseconds = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -21,7 +18,6 @@ async function refreshAccessTokenIfNecessary(db, refreshToken, expiresAt) {
     if (isExpired || !accessToken) {
       await spotifyApi.setRefreshToken(refreshToken);
       const refreshedAccessToken = await spotifyApi.refreshAccessToken();
-      console.log("refreshedAccessToken: ", refreshedAccessToken);
 
       const newAccessToken = refreshedAccessToken.body["access_token"];
       const newExpiresAt = refreshedAccessToken.body["expires_in"];
@@ -34,22 +30,17 @@ async function refreshAccessTokenIfNecessary(db, refreshToken, expiresAt) {
   }
 }
 
-async function iterateOverUsers() {
-  console.log("in iterate");
-
+async function iterateOverUsersReleaseAndDiscover() {
   try {
     const db = await connectToDatabase();
 
     const userCollection = db.collection("users");
     const tokenCollection = db.collection("tokens");
-    const today = new Date().toISOString().split("T")[0];
-
+    
     const cursor = userCollection.find();
     const tokens = await tokenCollection.findOne({});
     const refreshToken = tokens.refreshToken;
     const expiresAt = tokens.expiresAt;
-
-    // console.log("db is: ", db);
 
     for await (const user of cursor) {
       const spotifyId = user.spotifyId;
@@ -57,17 +48,46 @@ async function iterateOverUsers() {
 
       try {
         await refreshAccessTokenIfNecessary(db, refreshToken, expiresAt);
-        // return;
-        await createBackupPlaylists(spotifyId, today);
+        await createBackupGeneric('Discover Weekly', spotifyId);
+        await createBackupGeneric('Release Radar', spotifyId);
       } catch (error) {
-        console.log("Error processing user ID " + spotifyId + ": ", error);
+        console.log("Generic backup error processing user ID " + spotifyId + ": ", error);
       }
     }
   } catch (error) {
-    console.error("Error in iterateOverUsers:", error);
+    console.error("Error in iterateOverUsersReleaseAndDiscover:", error);
+  }
+}
+
+async function iterateOverUsersDaylists() {
+  try {
+    const db = await connectToDatabase();
+
+    const userCollection = db.collection("users");
+    const tokenCollection = db.collection("tokens");
+
+    const cursor = userCollection.find();
+    const tokens = await tokenCollection.findOne({});
+    const refreshToken = tokens.refreshToken;
+    const expiresAt = tokens.expiresAt;
+
+    for await (const user of cursor) {
+      const spotifyId = user.spotifyId;
+      const email = user.email;
+
+      try {
+        await refreshAccessTokenIfNecessary(db, refreshToken, expiresAt);
+        await createBackupDaylists(spotifyId);
+      } catch (error) {
+        console.log("Daylist backup error processing user ID " + spotifyId + ": ", error);
+      }
+    }
+  } catch (error) {
+    console.error("Error in iterateOverUsersDaylists:", error);
   }
 }
 
 module.exports = {
-  iterateOverUsers,
+  iterateOverUsersReleaseAndDiscover,
+  iterateOverUsersDaylists,
 };

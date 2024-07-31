@@ -42,27 +42,27 @@ const startServer = async () => {
   });
 
   // Schedule the task to run every Saturday at 2 AM (0 2 * * 6)
-  // cron.schedule("0 2 * * 6", async () => {
-  // try {
-  //   console.log("Running the task...");
-  //   await iterateOverUsers();
-  //   console.log("Task completed.");
-  // } catch (error) {
-  //   console.error("Error running the task:", error);
-  // }
-  // });
+  cron.schedule("0 2 * * 6", async () => {
+  try {
+    console.log("Backing up users' Discover Weekly and Release Radar playlists...");
+    await iterateOverUsers();
+    console.log("Discover Weekly and Release Radar backups completed.");
+  } catch (error) {
+    console.error("Error running the task:", error);
+  }
+  });
 
-   // Schedule the task to run every hour
-  //  cron.schedule("0 2 * * 6", async () => {
+ // Schedule the task to run every hour
+  cron.schedule("0 * * * *", async () => {
     try {
-      console.log("Running the task...");
+      console.log("Backing up users' daylists...");
       await iterateOverUsersReleaseAndDiscover();
       await iterateOverUsersDaylists();
-      console.log("Task completed.");
+      console.log("Daylist backups completed.");
     } catch (error) {
-      console.error("Error running the task:", error);
+      console.error("Error backing up daylists:", error);
     }
-    // });
+  });
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

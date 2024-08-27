@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cron = require("node-cron");
-const { connectToDatabase } = require("./routes/db");
+const { connectToDatabase, errorLog } = require("./routes/db");
 const { iterateOverUsersReleaseAndDiscover, iterateOverUsersDaylists } = require("./routes/backup");
 const handleAuth = require("./routes/auth");
 // const handleCallback = require("./routes/callback");
@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 });
 
 const startServer = async () => {
-  connectToDatabase();
+  await connectToDatabase();
 
   // Require and use the Spotify routes
   app.get("/auth", handleAuth);
@@ -37,29 +37,29 @@ const startServer = async () => {
   app.use("/auth", spotifyRoutes);
 
   // Define the root route
-  app.get("/", (req, res) => {
-    res.send("Hello, this is the root path!");
-  });
+  // app.get("/", (req, res) => {
+  //   res.send("Hello, this is the root path!");
+  // });
 
   // Schedule the task to run every Saturday at 2 AM (0 2 * * 6)
-  cron.schedule("0 2 * * 6", async () => {
+  // cron.schedule("0 2 * * 6", async () => {
   try {
     console.log("Backing up users' Discover Weekly and Release Radar playlists...");
+    return;
     await iterateOverUsers();
     console.log("Discover Weekly and Release Radar backups completed.");
   } catch (error) {
     console.error("Error running the task:", error);
   }
-  });
+  // });
 
  // Schedule the task to run every hour
   cron.schedule("0 * * * *", async () => {
     try {
-      console.log("Backing up users' daylists...");
       await iterateOverUsersReleaseAndDiscover();
       await iterateOverUsersDaylists();
       console.log("Daylist backups completed.");
-    } catch (error) {
+    } catch (error) { 
       console.error("Error backing up daylists:", error);
     }
   });

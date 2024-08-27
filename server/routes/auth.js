@@ -2,10 +2,13 @@ const {
   connectToDatabase,
   saveToDatabase,
   saveRefreshTokenToDatabase,
+  errorLog,
+  authLog
 } = require("./db");
 const { 
   createBackupDaylists,
-   createBackupGeneric
+   createBackupGeneric,
+   createBackupDaylistsSamePlaylist
  } = require("./spotify");
 const express = require("express");
 const router = express.Router();
@@ -75,14 +78,16 @@ router.get("/callback", async (req, res) => {
     )
     {
       res.redirect("https://memorifyclient.vercel.app/successful-sign-up");
+      authLog(userId);
       await createBackupGeneric('Discover Weekly', userId);
       await createBackupGeneric('Release Radar', userId);
-      await createBackupDaylists(userId);
+      await createBackupDaylistsSamePlaylist(userId);
     } else {
       res.redirect("https://memorifyclient.vercel.app/unsuccessful-sign-up");
+      errorLog(userId, '3', 'Problem saving user and tokens in DB.');
     }
   } catch (error) {
-    console.error("error: ", error);
+    errorLog('', '3', 'Authentication flow not successful.', error);
     res.redirect("https://memorifyclient.vercel.app/unsuccessful-sign-up");
   }
 });

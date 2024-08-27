@@ -50,6 +50,7 @@ async function iterateOverUsersReleaseAndDiscover() {
         await refreshAccessTokenIfNecessary(db, refreshToken, expiresAt);
         await createBackupGeneric('Discover Weekly', spotifyId);
         await createBackupGeneric('Release Radar', spotifyId);
+        
       } catch (error) {
         console.log("Generic backup error processing user ID " + spotifyId + ": ", error);
       }

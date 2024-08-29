@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 import { Link } from "react-router-dom";
-import './LandingPage.css';
-import TextSlideshow from './TextSlideshow';
-import logo from '../../icons/memorify-high-resolution-logo-color-on-transparent-background.png'; // Import the logo image
+import "./LandingPage.css";
+import TextSlideshow from "./TextSlideshow";
+import logo from "../../icons/memorify-high-resolution-logo-color-on-transparent-background.png"; // Import the logo image
 
 // const LandingPage = () => {
 //   return (
@@ -27,14 +27,15 @@ import logo from '../../icons/memorify-high-resolution-logo-color-on-transparent
 // export default LandingPage;
 
 const LandingPage = () => {
-  const texts = ["Discover Weekly", "Release Radar", "Daylist"];
+  const texts = ["Discover Weekly", "Release Radar", "Daylists"];
 
   return (
     <div className="landing-page">
       <div className="content">
         <h1 className="heading">Never Skip a Beat.</h1>
         <p className="description">
-          Your <TextSlideshow texts={texts} />, effortlessly saved and always accessible.
+          Your <TextSlideshow texts={texts} />, effortlessly saved and always
+          accessible.
         </p>
         <p className="description">
           Runs automatically - let us handle the boring part.

@@ -7,6 +7,7 @@ const userSchema = new Schema({
 });
 
 const tokenSchema = new Schema({
+  userId: { type: String, required: true },
   refreshToken: { type: String, required: true },
   expiresAt: { type: Date, required: true },
 });
@@ -19,6 +20,7 @@ const authLogSchema = new Schema({
 const backupLogSchema = new Schema({
   userId: { type: String, required: true },
   playlist: { type: String, required: true },
+  backupMsg: { type: String, required: false },
   time: { type: String, required: true },
 })
 

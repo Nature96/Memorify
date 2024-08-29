@@ -1,8 +1,9 @@
-const { createBackupDaylists, createBackupGeneric } = require("./spotify");
-const { connectToDatabase, saveRefreshTokenToDatabase } = require("./db");
+const { createBackupDaylists, createBackupGeneric, createBackupDaylistsSamePlaylist } = require("./spotify");
+const { connectToDatabase, saveRefreshTokenToDatabase, errorLog } = require("./db");
+const { User, Token, BackupLog, ErrorLog, EventLog} = require('./models');
 const { spotifyApi } = require("./spotify");
 
-async function refreshAccessTokenIfNecessary(db, refreshToken, expiresAt) {
+async function refreshAccessTokenIfNecessary(userId, refreshToken, expiresAt) {
   try {
     const accessToken = await spotifyApi.getAccessToken();
 
@@ -23,10 +24,11 @@ async function refreshAccessTokenIfNecessary(db, refreshToken, expiresAt) {
       const newExpiresAt = refreshedAccessToken.body["expires_in"];
       await spotifyApi.setAccessToken(newAccessToken);
 
-      result = await saveRefreshTokenToDatabase(db, refreshToken, newExpiresAt);
+      result = await saveRefreshTokenToDatabase(userId, refreshToken, newExpiresAt);
     }
   } catch (error) {
     console.error("Error refreshing access token:", error);
+    errorLog(userId, '4', 'Error refreshing access token.', error);
   }
 }
 
@@ -34,11 +36,11 @@ async function iterateOverUsersReleaseAndDiscover() {
   try {
     const db = await connectToDatabase();
 
-    const userCollection = db.collection("users");
-    const tokenCollection = db.collection("tokens");
+    // const userCollection = db.collection("users");
+    // const tokenCollection = db.collection("tokens");
     
-    const cursor = userCollection.find();
-    const tokens = await tokenCollection.findOne({});
+    const cursor = await User.find();
+    const tokens = await Token.findOne({});
     const refreshToken = tokens.refreshToken;
     const expiresAt = tokens.expiresAt;
 
@@ -47,16 +49,18 @@ async function iterateOverUsersReleaseAndDiscover() {
       const email = user.email;
 
       try {
-        await refreshAccessTokenIfNecessary(db, refreshToken, expiresAt);
+        await refreshAccessTokenIfNecessary(spotifyId, refreshToken, expiresAt);
         await createBackupGeneric('Discover Weekly', spotifyId);
         await createBackupGeneric('Release Radar', spotifyId);
         
       } catch (error) {
-        console.log("Generic backup error processing user ID " + spotifyId + ": ", error);
+        errorLog(spotifyId, "Generic backup error processing user ID", error);
+        // console.log("Generic backup error processing user ID " + spotifyId + ": ", error);
       }
     }
   } catch (error) {
-    console.error("Error in iterateOverUsersReleaseAndDiscover:", error);
+    // console.error("Error in iterateOverUsersReleaseAndDiscover:", error);
+    errorLog('', '4', "Error in iterateOverUsersReleaseAndDiscover", error);
   }
 }
 
@@ -64,11 +68,11 @@ async function iterateOverUsersDaylists() {
   try {
     const db = await connectToDatabase();
 
-    const userCollection = db.collection("users");
-    const tokenCollection = db.collection("tokens");
+    // const userCollection = db.collection("users");
+    // const tokenCollection = db.collection("tokens");
 
-    const cursor = userCollection.find();
-    const tokens = await tokenCollection.findOne({});
+    const cursor = await User.find();
+    const tokens = await Token.findOne({});
     const refreshToken = tokens.refreshToken;
     const expiresAt = tokens.expiresAt;
 
@@ -78,13 +82,14 @@ async function iterateOverUsersDaylists() {
 
       try {
         await refreshAccessTokenIfNecessary(db, refreshToken, expiresAt);
-        await createBackupDaylists(spotifyId);
+        await createBackupDaylistsSamePlaylist(spotifyId);
       } catch (error) {
         console.log("Daylist backup error processing user ID " + spotifyId + ": ", error);
+        errorLog(spotifyId, '4', )
       }
     }
   } catch (error) {
-    console.error("Error in iterateOverUsersDaylists:", error);
+    errorLog('', '4', 'Error in iterateOverUsersDaylists', error);
   }
 }
 

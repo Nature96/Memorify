@@ -6,9 +6,30 @@ const mongoUser = process.env.MONGODB_USERNAME;
 
 const uri = `mongodb+srv://${encodeURIComponent(mongoUser)}:${encodeURIComponent(mongoPassword)}@cluster0.aqjapeo.mongodb.net/?retryWrites=true&w=majority`;
 const uriWithDb = uri.replace(/\/?(\?|$)/, '/memorifyDb$1');
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+// const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 let databasePromise;
+
+// New function
+async function connectToDatabase() {
+  if (!databasePromise) {
+    databasePromise = mongoose.connect(uriWithDb, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
+    .then(() => {
+      console.log('Connected to MongoDB');
+      return mongoose.connection;
+    })
+    .catch(error => {
+      console.error('Error connecting to MongoDB:', error);
+      throw error;
+    });
+  }
+
+  // eventLog('', '1', 'Connected to database');
+  return databasePromise;
+}
 
 // Old function
 // async function connectToDatabase() {
@@ -28,47 +49,48 @@ let databasePromise;
 // }
 
 // New function
-async function connectToDatabase() {
-  if (!databasePromise) {
-    databasePromise = mongoose.connect(uriWithDb, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
-    .then(() => {
-      console.log('Connected to MongoDB');
-      return mongoose.connection;
-    })
-    .catch(error => {
-      console.error('Error connecting to MongoDB:', error);
-      throw error;
-    });
-  }
-
-  return databasePromise;
-}
-
-// Old function
-async function saveToDatabase(db, userDataId, email) {
-  const userCollection = db.collection("users");
-
+async function saveToDatabase(userDataId, email) {
   const userDocument = {
     spotifyId: userDataId,
     email,
   };
 
-  const result = await userCollection.updateOne(
-    { spotifyId: userDataId },
-    { $set: userDocument },
-    { upsert: true }
-  );
+  try {
+    const result = await User.updateOne(
+      { spotifyId: userDataId },
+      { $set: userDocument },
+      { upsert: true }
+    );
 
-  // console.log("User saved/updated:", result);
-
-  return result;
+    return result;
+  } catch (error) {
+    errorLog(userDataId, "5", "Error saving/updating user:", error);
+  }
 }
 
-async function saveRefreshTokenToDatabase(db, refreshToken, expiresIn) {
-  const tokenCollection = db.collection("tokens");
+// Old function
+// async function saveToDatabase(db, userDataId, email) {
+//   const userCollection = db.collection("users");
+
+//   const userDocument = {
+//     spotifyId: userDataId,
+//     email,
+//   };
+
+  
+//   const result = await userCollection.updateOne(
+//     { spotifyId: userDataId },
+//     { $set: userDocument },
+//     { upsert: true }
+//   );
+//   return result;
+// }
+
+
+
+
+async function saveRefreshTokenToDatabase(userId, refreshToken, expiresIn) {
+  // const tokenCollection = db.collection("tokens");
 
    // Calculate expiration time in milliseconds
    const expirationMilliseconds = Date.now() + expiresIn * 1000;
@@ -77,25 +99,29 @@ async function saveRefreshTokenToDatabase(db, refreshToken, expiresIn) {
    const expiresAt = new Date(expirationMilliseconds);
 
   const tokenDocument = {
+    userId,
     refreshToken,
     expiresAt: expiresAt,
   };
 
-  const result = await tokenCollection.updateOne(
-    {}, // No specific criteria since it's a single token
-    { $set: tokenDocument },
-    { upsert: true }
-  );
+  try{
+    const result = await Token.updateOne(
+      {}, // No specific criteria since it's a single token
+      { $set: tokenDocument },
+      { upsert: true }
+    );
 
-  // console.log("Refresh token saved/updated:", result);
-
-  return result;
+    return result;
+  }
+  catch (error) {
+    errorLog(userId, '4', 'Could not save refresh token to database.', error);
+  }
 }
 
 async function getRefreshTokenExpireValue(db) {
-  const tokenCollection = db.collection("tokens");
+  // const tokenCollection = db.collection("tokens");
 
-  const tokenDocument = await tokenCollection.findOne({});
+  const tokenDocument = await Token.findOne({});
   if (tokenDocument) {
     return tokenDocument.expiresAt;
   } else {
@@ -143,6 +169,32 @@ async function authLog(userId, time = formatDate(new Date())) {
   }
 }
 
+async function backupLog(userId, playlist, message = '', time = formatDate(new Date())) {
+  try {
+    const result = await BackupLog.create({ 
+      userId,
+      playlist,
+      message,
+      time
+    });
+  } catch (err) {
+    errorLog(userId, '2', "Error creating backup log", err);
+  }
+}
+
+async function eventLog(userId = '', severity, event, time = formatDate(new Date())) {
+  try {
+    const result = await EventLog.create({
+      userId,
+      severity,
+      event,
+      time
+    });
+  } catch (err) {
+    errorLog(userId, '2', "Error creating event log:", err);
+  }
+}
+
 
 
 module.exports = {
@@ -152,4 +204,6 @@ module.exports = {
   getRefreshTokenExpireValue,
   errorLog,
   authLog,
+  backupLog,
+  eventLog
 };

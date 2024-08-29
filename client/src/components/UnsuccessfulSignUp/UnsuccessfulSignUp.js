@@ -23,7 +23,7 @@ const UnsuccessfulSignUp = () => {
           <h2 className="contact-heading">Need Assistance?</h2>
           <p>
             If you encounter persistent issues, please{" "}
-            <a href="mailto:nisargntanna@gmail.com" className="contact-link">
+            <a href="mailto:nisargntanna@gmail.com" className="contact-link-unsuccessful">
               contact us
             </a>{" "}
             for further assistance.

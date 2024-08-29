@@ -3,7 +3,8 @@ const {
   saveToDatabase,
   saveRefreshTokenToDatabase,
   errorLog,
-  authLog
+  authLog,
+  backupLog
 } = require("./db");
 const { 
   createBackupDaylists,
@@ -14,10 +15,20 @@ const express = require("express");
 const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");
 
+let redirectLink = "https://memorify-q4q0.onrender.com/auth/callback";
+let successfulSignUpLink = "https://memorifyclient.vercel.app/successful-sign-up";
+let unsuccessfulSignUpLink = "https://memorifyclient.vercel.app/unsuccessful-sign-up";
+
+if(process.env.DEBUG_MODE === "true") {
+  redirectLink = "http://localhost:5000/auth/callback";
+  successfulSignUpLink = "http://localhost:3000/successful-sign-up";
+  unsuccessfulSignUpLink = "http://localhost:3000/unsuccessful-sign-up";
+}
+
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: "https://memorify-q4q0.onrender.com/auth/callback",
+  redirectUri: redirectLink,
 });
 
 var generateRandomString = function (length = 16) {
@@ -61,9 +72,9 @@ router.get("/callback", async (req, res) => {
     const userId = userData.id;
 
     const db = await connectToDatabase();
-    const userSaved = await saveToDatabase(db, userId, email);
+    const userSaved = await saveToDatabase(userId, email);
     const tokenSaved = await saveRefreshTokenToDatabase(
-      db,
+      userId,
       refresh_token,
       expires_in
     );
@@ -77,18 +88,21 @@ router.get("/callback", async (req, res) => {
         tokenSaved.matchedCount === 1)
     )
     {
-      res.redirect("https://memorifyclient.vercel.app/successful-sign-up");
+      res.redirect(successfulSignUpLink);
       authLog(userId);
       await createBackupGeneric('Discover Weekly', userId);
+      backupLog(userId, 'Discover Weekly', 'CreateBackupGeneric ran for Discover Weekly in auth.js');
       await createBackupGeneric('Release Radar', userId);
+      backupLog(userId, 'Release Radar', 'CreateBackupGeneric ran for Release Radar in auth.js');
       await createBackupDaylistsSamePlaylist(userId);
+      backupLog(userId, 'Daylist', 'CreateBackupDaylistsSameplaylist ran in auth.js');
     } else {
-      res.redirect("https://memorifyclient.vercel.app/unsuccessful-sign-up");
+      res.redirect(unsuccessfulSignUpLink);
       errorLog(userId, '3', 'Problem saving user and tokens in DB.');
     }
   } catch (error) {
     errorLog('', '3', 'Authentication flow not successful.', error);
-    res.redirect("https://memorifyclient.vercel.app/unsuccessful-sign-up");
+    res.redirect(unsuccessfulSignUpLink);
   }
 });
 

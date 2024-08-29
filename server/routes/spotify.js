@@ -2,11 +2,18 @@
 const express = require("express");
 const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");
+const { errorLog, backupLog } = require("./db");
+
+let redirectLink = "https://memorify-q4q0.onrender.com/auth/callback";
+if(process.env.DEBUG_MODE === "true")
+{
+  redirectLink = 'http://localhost:5000/auth/callback';
+}
 
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: "https://memorify-q4q0.onrender.com/auth/callback",
+  redirectUri: redirectLink,
 });
 
 async function createBackupGeneric(spotifyPlaylist, userId) {
@@ -61,15 +68,21 @@ async function createBackupGeneric(spotifyPlaylist, userId) {
 
           // Add the tracks to the new playlist
           await spotifyApi.addTracksToPlaylist(newPlaylist.body.id, trackUris);
+          backupLog(userId, spotifyPlaylist, 'Backup ran within createBackupGeneric code block');
         }
       } else {
-        console.log(`No ${spotifyPlaylist} playlist found for ${userId}`);
+        const errorMsg = `No ${spotifyPlaylist} playlist found for ${userId}`;
+        errorLog(userId, '3', errorMsg, '');
       }
     } else {
-      console.log(`Incorrect ${spotifyPlaylist} name in createBackupGeneric`);
+      const errorMsg = `Incorrect ${spotifyPlaylist} name in createBackupGeneric`;
+      errorLog(userId, '3', errorMsg, '');
     }
+
   } catch (error) {
-    console.error("Error creating backup for :" + spotifyPlaylist, error);
+    const errorMsg = "Error creating backup for :" + spotifyPlaylist;
+    errorLog(userId, '4', errorMsg, error);
+    throw error;
   }
 }
 
@@ -126,13 +139,17 @@ async function createBackupGenericSamePlaylist(spotifyPlaylist, userId) {
           await spotifyApi.addTracksToPlaylist(existingMemorifiedPlaylist.id, newTrackUris);
         }
       } else {
-        console.log(`No ${spotifyPlaylist} playlist found for ${userId}`);
+        const errorMsg = `No ${spotifyPlaylist} playlist found for ${userId}`;
+        errorLog(userId, '3', errorMsg, '');
       }
     } else {
-      console.log(`Incorrect ${spotifyPlaylist} name in createBackupGenericSamePlaylist`);
+      const errorMsg = `Incorrect ${spotifyPlaylist} name in createBackupGenericSamePlaylist`;
+      errorLog(userId, '3', errorMsg, '');
     }
   } catch (error) {
-    console.error("Error creating backup for :" + spotifyPlaylist, error);
+    const errorMsg = "Error creating backup for :" + spotifyPlaylist;
+    errorLog(userId, '4', errorMsg, error);
+    throw error;
   }
 }
 
@@ -196,10 +213,12 @@ async function createBackupDaylists(userId)
       }
     }
     else {
-      console.log("No daylist found for user " + `${userId}`);
+      const errorMsg = "No daylist found for user " + `${userId}`;
+      errorLog(userId, '2', errorMsg);
     }
   } catch (error) {
-    console.error("Error in createBackupDaylists:", error);
+    const errorMsg = "Error in createBackupDaylists";
+    errorLog(userId, '4', errorMsg, error);
     throw error;
   }
 }
@@ -260,11 +279,12 @@ async function createBackupDaylistsSamePlaylist(userId) {
         await spotifyApi.addTracksToPlaylist(existingMemorifiedDaylist.id, newTrackUris);
       }
     } else {
-      console.log("No daylist found for user " + `${userId}`);
+      const errorMsg = "No daylist found for user " + `${userId}`;
+      errorLog(userId, '2', errorMsg);
     }
   } catch (error) {
-    console.error("Error in createBackupDaylistsSamePlaylist:", error);
-    throw error;
+    const errorMsg = "Error in createBackupDaylistsSamePlaylist";
+    errorLog(userId, '4', errorMsg, error);
   }
 }
 

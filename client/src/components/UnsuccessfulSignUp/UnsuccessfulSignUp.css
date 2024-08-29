@@ -37,8 +37,8 @@
   margin-bottom: 30px;
 }
 
-.contact-link {
-  color: #1db954; /* Green text color */
+.contact-link-unsuccessful {
+  color: #1db954 !important; /* Green text color */
   text-decoration: underline;
 }
 

@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cron = require("node-cron");
-const { connectToDatabase, errorLog } = require("./routes/db");
+const { connectToDatabase, errorLog, eventLog } = require("./routes/db");
 const { iterateOverUsersReleaseAndDiscover, iterateOverUsersDaylists } = require("./routes/backup");
 const handleAuth = require("./routes/auth");
 // const handleCallback = require("./routes/callback");
@@ -13,9 +13,12 @@ const handleAuth = require("./routes/auth");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+let corsLink = "https://memorifyclient.vercel.app";
+if(process.env.DEBUG_MODE === "true") corsLink = 'http://localhost:3000';
+
 app.use(cors());
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://memorifyclient.vercel.app");
+  res.header("Access-Control-Allow-Origin", corsLink);
   res.header(
     "Access-Control-Allow-Methods",
     "GET, POST, OPTIONS, PUT, PATCH, DELETE"
@@ -29,6 +32,7 @@ app.use((req, res, next) => {
 
 const startServer = async () => {
   await connectToDatabase();
+  eventLog('', '1', 'Connected to MongoDB');
 
   // Require and use the Spotify routes
   app.get("/auth", handleAuth);
@@ -44,28 +48,31 @@ const startServer = async () => {
   // Schedule the task to run every Saturday at 2 AM (0 2 * * 6)
   // cron.schedule("0 2 * * 6", async () => {
   try {
-    console.log("Backing up users' Discover Weekly and Release Radar playlists...");
-    return;
-    await iterateOverUsers();
-    console.log("Discover Weekly and Release Radar backups completed.");
+    // console.log("Backing up users' Discover Weekly and Release Radar playlists");
+    eventLog('', '4', "Backing up users' Discover Weekly and Release Radar playlists in weekly cron");
+    await iterateOverUsersReleaseAndDiscover();
+    eventLog('', '1', 'iterateOverUsersReleaseAndDiscover ran in weekly cron');
   } catch (error) {
-    console.error("Error running the task:", error);
+    errorLog('', '4', "Error backing up Release Radar and Discover Weekly playlists in weekly cron", error);
   }
   // });
 
  // Schedule the task to run every hour
   cron.schedule("0 * * * *", async () => {
     try {
+      eventLog('', '4', "Backing up users' Discover Weekly and Release Radar playlists in hourly cron");
       await iterateOverUsersReleaseAndDiscover();
+      eventLog('', '1', "Backing up users' daylists in hourly cron");
       await iterateOverUsersDaylists();
-      console.log("Daylist backups completed.");
+      eventLog('', '1', "Backups completed in hourly cron");
     } catch (error) { 
-      console.error("Error backing up daylists:", error);
+      // console.error("Error backing up daylists:", error);
+      errorLog('', '4', "Error backing up in hourly cron", error);
     }
   });
 
   app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    eventLog('', '1', `Server is running on port ${PORT}`);
   });
 };
 

@@ -35,7 +35,7 @@
 }
 
 .contact-link {
-  color: white;
+  color: white !important;
   text-decoration: underline;
 }
 

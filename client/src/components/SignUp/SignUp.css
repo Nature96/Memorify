@@ -1,5 +1,5 @@
 /* SignUp.css */
-.sign-up-page {
+/* .sign-up-page {
     background: linear-gradient(45deg, #1ed760, #25a84b);
     color: white;
     height: 100vh;
@@ -14,8 +14,8 @@
   }
   
   .spotify-icon {
-    width: 100px; /* Adjust as needed */
-    height: 100px; /* Adjust as needed */
+    width: 100px; 
+    height: 100px; 
     margin-bottom: 20px;
   }
   
@@ -41,10 +41,64 @@
 
    .app-name-signup {
     font-size: 3rem;
-    color: black; /* Green text color */
+    color: black; 
     position: absolute;
     top: 20px;
     left: 20px;
     z-index: 1;
-  }
+  } */
   
+  /* SignUp.css */
+.sign-up-page {
+  background: linear-gradient(45deg, #1ed760, #25a84b);
+  color: white;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.content {
+  text-align: center;
+}
+
+.spotify-icon {
+  width: 100px; /* Adjust as needed */
+  height: 100px; /* Adjust as needed */
+  margin-bottom: 20px;
+}
+
+.heading {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.description {
+  font-size: 1.25rem;
+  margin-bottom: 30px;
+}
+
+.sign-up-button {
+  background-color: white;
+  color: #1ed760; /* Same color as the background */
+  font-size: 1.5rem;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border-radius: 25px;
+}
+
+.sign-up-button:hover {
+  background-color: #f0f0f0;
+}
+
+.app-name-signup {
+  font-size: 3rem;
+  color: black; /* Green text color */
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1;
+}
